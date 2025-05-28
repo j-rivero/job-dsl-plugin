@@ -23,15 +23,22 @@ jobs:
     - name: Build with Maven
       run: mvn clean package -DskipTests
 
-    - name: Extract version from tag
+    - name: Extract version
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/job-dsl-}" >> $GITHUB_OUTPUT
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/job-dsl-}" >> $GITHUB_OUTPUT
+        else
+          # For branch pushes, use a simpler version identifier
+          echo "VERSION=$(date +'%Y%m%d')-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+        fi
 
     - name: Rename artifact
       run: |
-        SOURCE_JAR=$(find job-dsl-core/target -name "job-dsl-core-*-jar-with-dependencies.jar")
+        SOURCE_JAR=$(find job-dsl-core/target/ -name "job-dsl-core-jar-with-dependencies.jar")
         DEST_DIR="artifacts"
         mkdir -p $DEST_DIR
+
         cp "$SOURCE_JAR" "$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar"
 
     - name: Upload JAR artifact
