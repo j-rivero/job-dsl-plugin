@@ -2,9 +2,8 @@ name: Build and Export Job DSL Core
 
 on:
   push:
-    tags:
-      - 'job-dsl-*-jrivero'
-  workflow_dispatch:
+    #    tags:
+    #  - 'job-dsl-*-jrivero'
 
 jobs:
   build:
@@ -15,7 +14,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Temurin JDK 21
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4.7.1
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -36,7 +35,7 @@ jobs:
         cp "$SOURCE_JAR" "$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar"
 
     - name: Upload JAR artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4.6.2
       with:
         name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}
         path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
