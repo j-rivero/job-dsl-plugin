@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
     - name: Checkout code
@@ -30,7 +33,11 @@ jobs:
           echo "VERSION=${GITHUB_REF#refs/tags/job-dsl-}" >> $GITHUB_OUTPUT
         else
           # For branch pushes, use a simpler version identifier
-          echo "VERSION=$(date +'%Y%m%d')-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+          # grab version from branch name using the form */job-dsl-x.YY-packages-patched
+          # getting the version after job-dsl and before the next dash
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          VERSION_PART=$(echo $BRANCH_NAME | grep -oP '(?<=job-dsl-)[^/-]+')
+          echo "VERSION=${VERSION_PART}-jrivero-$(date +'%Y%m%d')-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
         fi
 
     - name: Rename artifact
@@ -47,3 +54,7 @@ jobs:
         name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}
         path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
         if-no-files-found: error
+    - name: Publish package
+      run: mvn --batch-mode deploy
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
