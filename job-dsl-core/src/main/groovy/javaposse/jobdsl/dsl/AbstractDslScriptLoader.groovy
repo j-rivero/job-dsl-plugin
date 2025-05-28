@@ -167,7 +167,7 @@ abstract class AbstractDslScriptLoader<S extends JobParent, G extends GeneratedI
     private static void checkCollidingScriptName(ScriptRequest scriptRequest, ClassLoader classLoader,
                                                  PrintStream logger) {
         String scriptName = scriptRequest.scriptBaseName
-        Package[] packages = new SnitchingClassLoader(classLoader).packages
+        Package[] packages = classLoader.getDefinedPackages()
         if (packages.any { it.name == scriptName || it.name.startsWith("${scriptName}.") }) {
             logger.println(
                     "Warning: the script name '${scriptRequest.scriptName} is identical to a package name; choose a " +
@@ -304,17 +304,6 @@ abstract class AbstractDslScriptLoader<S extends JobParent, G extends GeneratedI
                     LOGGER.log(Level.WARNING, "Failed to close stream for user content ${userContent.path}", e)
                 }
             }
-        }
-    }
-
-    private static class SnitchingClassLoader extends ClassLoader {
-        SnitchingClassLoader(ClassLoader parent) {
-            super(parent)
-        }
-
-        @Override
-        Package[] getPackages() {
-            super.packages
         }
     }
 }
