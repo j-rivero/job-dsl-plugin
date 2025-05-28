@@ -56,6 +56,8 @@ jobs:
         if-no-files-found: error
     - name: Publish package
       run: mvn deploy:deploy-file \
+        -DrepositoryId=github \
+        -Durl=https://maven.pkg.github.com/jrivero/job-dsl-core \
         -Dfile="$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar" \
         -Dversion=${{ steps.get_version.outputs.VERSION }} \
         -Dpackaging=jar \
