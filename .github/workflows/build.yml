@@ -1,0 +1,43 @@
+name: Build and Export Job DSL Core
+
+on:
+  push:
+    tags:
+      - 'job-dsl-*-jrivero'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Temurin JDK 21
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+
+    - name: Extract version from tag
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/job-dsl-}" >> $GITHUB_OUTPUT
+
+    - name: Rename artifact
+      run: |
+        SOURCE_JAR=$(find job-dsl-core/target -name "job-dsl-core-*-jar-with-dependencies.jar")
+        DEST_DIR="artifacts"
+        mkdir -p $DEST_DIR
+        cp "$SOURCE_JAR" "$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar"
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}
+        path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
+        if-no-files-found: error
