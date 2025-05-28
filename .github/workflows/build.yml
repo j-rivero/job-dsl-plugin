@@ -55,6 +55,11 @@ jobs:
         path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
         if-no-files-found: error
     - name: Publish package
-      run: mvn --batch-mode deploy -DskipTests
+      run: mvn deploy:deploy-file \
+        -Dfile="$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar" \
+        -Dversion=${{ steps.get_version.outputs.VERSION }} \
+        -Dpackaging=jar \
+        -DgeneratePom=true \
+        -DskipTests
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
