@@ -29,6 +29,13 @@
     <tag>job-dsl-1.85</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
+  <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/j-rivero/job-dsl-plugin</url>
+    </repository>
+  </distributionManagement>
   <properties>
     <revision>1.85</revision>
     <changelist>-SNAPSHOT</changelist>
@@ -107,12 +114,5 @@
         </configuration>
       </plugin>
     </plugins>
-    </build>
-    <distributionManagement>
-    <repository>
-      <id>github</id>
-      <name>GitHub Packages</name>
-      <url>https://maven.pkg.github.com/j-rivero/job-dsl-plugin</url>
-    </repository>
-  </distributionManagement>
+  </build>
 </project>
