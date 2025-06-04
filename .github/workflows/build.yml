@@ -1,0 +1,67 @@
+name: Build and Export Job DSL Core
+
+on:
+  push:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Temurin JDK 21
+      uses: actions/setup-java@v4.7.1
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build with Maven
+      run: mvn clean package -DskipTests
+
+    - name: Extract version
+      id: get_version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          echo "VERSION=${GITHUB_REF#refs/tags/job-dsl-}" >> $GITHUB_OUTPUT
+        else
+          # For branch pushes, use a simpler version identifier
+          # grab version from branch name using the form */job-dsl-x.YY-packages-patched
+          # getting the version after job-dsl and before the next dash
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          VERSION_PART=$(echo $BRANCH_NAME | grep -oP '(?<=job-dsl-)[^/-]+')
+          echo "VERSION=${VERSION_PART}-jrivero-$(date +'%Y%m%d')-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Rename artifact
+      run: |
+        SOURCE_JAR=$(find job-dsl-core/target/ -name "job-dsl-core-jar-with-dependencies.jar")
+        DEST_DIR="artifacts"
+        mkdir -p $DEST_DIR
+
+        cp "$SOURCE_JAR" "$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar"
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}
+        path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
+        if-no-files-found: error
+
+    - name: Upload JAR to release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: artifacts/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar
+        asset_name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar
+        asset_content_type: application/java-archive
