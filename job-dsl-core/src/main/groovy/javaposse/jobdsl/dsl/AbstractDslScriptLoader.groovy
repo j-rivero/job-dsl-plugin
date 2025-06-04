@@ -166,8 +166,10 @@ abstract class AbstractDslScriptLoader<S extends JobParent, G extends GeneratedI
         }
     }
 
-    private static void checkCollidingScriptName(String scriptFile, ClassLoader classLoader, PrintStream logger) {
-        String scriptName = getScriptName(scriptFile)
+    private static void checkCollidingScriptName(ScriptRequest scriptRequest, ClassLoader classLoader,
+                                                 PrintStream logger) {
+        String scriptName = scriptRequest.scriptBaseName
+
         try {
             // Use reflection to access the protected getPackages() method
             Method getPackagesMethod = ClassLoader.class.getDeclaredMethod('getPackages')
@@ -176,8 +178,8 @@ abstract class AbstractDslScriptLoader<S extends JobParent, G extends GeneratedI
 
             if (packages.any { it.name == scriptName || it.name.startsWith("${scriptName}.") }) {
                 logger.println(
-                        "Warning: the script name '${scriptFile}' is identical to a package name; choose a different " +
-                                'script name to avoid problems'
+                    "Warning: the script name '${scriptName} is identical to a package name; choose a different " +
+                        'script name to avoid problems'
                 )
             }
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
