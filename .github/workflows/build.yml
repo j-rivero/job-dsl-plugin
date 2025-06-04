@@ -2,14 +2,14 @@ name: Build and Export Job DSL Core
 
 on:
   push:
-    #    tags:
-    #  - 'job-dsl-*-jrivero'
+  release:
+    types: [published]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
@@ -54,14 +54,14 @@ jobs:
         name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}
         path: artifacts/job-dsl-core-*-jar-with-dependencies.jar
         if-no-files-found: error
-    - name: Publish package
-      run: mvn deploy:deploy-file \
-        -DrepositoryId=github \
-        -Durl=https://maven.pkg.github.com/jrivero/job-dsl-core \
-        -Dfile="$DEST_DIR/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar" \
-        -Dversion=${{ steps.get_version.outputs.VERSION }} \
-        -Dpackaging=jar \
-        -DgeneratePom=true \
-        -DskipTests
+
+    - name: Upload JAR to release
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: artifacts/job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar
+        asset_name: job-dsl-core-${{ steps.get_version.outputs.VERSION }}-jar-with-dependencies.jar
+        asset_content_type: application/java-archive
